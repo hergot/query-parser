@@ -1,0 +1,14 @@
+{
+    "name": "hergot/query-parser",
+    "description": "query parser",
+    "autoload": {
+        "psr-0": { "": "src/" }
+    },
+    "require": {
+        "php": ">=5.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    },
+    "minimum-stability": "stable"
+}
