@@ -75,7 +75,7 @@ class Tokenizer {
                 $quote = $item[0];
                 $item = str_replace($quote . $quote, $quote, trim($item, $quote));
             }
-            return array('class' => $class, 'token' => $item);
+            return new Token($item, $class);
         }, $filteredTokens);
         return $classifiedTokens;
     }
