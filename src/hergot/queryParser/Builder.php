@@ -80,10 +80,8 @@ class Builder
         }
         if ($operator !== null) {
             return new Expression($operator->getContent(), $operands);
-        } elseif (count($operands) === 1) {
-            return $operands[0];
         } else {
-            return $operands;
+            return count($operands) === 1 ? $operands[0] : $operands;
         }
     }
 
