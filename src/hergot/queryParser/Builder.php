@@ -36,32 +36,29 @@ class Builder
         for ($i = 0, $length = count($tokens); $i < $length; $i++) {
             /* @var $token Token */
             $token = $tokens[$i];
-            if ($token->getClass() === 'brace') {
-                if ($token->getContent() === '(') {
+            $tokenClass = $token->getClass();
+            $tokenContent = $token->getContent();
+            if ($tokenClass === 'brace') {
+                if ($tokenContent === '(') {
                     $pos = $this->findMatchingTokenIndex($tokens, '(', ')', $i + 1);
                     $buffer = array_slice($tokens, $i + 1, $pos - $i);
                     $i = $pos + 1;
                     $operands[] = $this->build($buffer);
-                } elseif ($token->getContent() === '[') {
+                } elseif ($tokenContent === '[') {
                     $pos = $this->findMatchingTokenIndex($tokens, '[', ']', $i + 1);
                     $buffer = array_slice($tokens, $i + 1, $pos - $i);
                     $i = $pos + 1;
                     $operands[] = $this->buildArrayElement($buffer);
                 }
-            } elseif ($token->getClass() === 'operator') {
-                if ($operator === null) {
+            } elseif ($tokenClass === 'operator' && $operator === null) {
                     $operator = $token;
                     $operatorIndex = count($operands);
-                } else {
-                    if ($operator->getContent() === $token->getContent()) {
-                        continue;
-                    }
+            } elseif ($tokenClass === 'operator' && $operator !== null) {
+                if ($operator->getContent() !== $tokenContent) {
                     $operatorPriority = $this->getOperatorPriority($operator);
                     $tokenPriority = $this->getOperatorPriority($token);
                     if ($operatorPriority <= $tokenPriority) {
-                        $operands = array(
-                            new Expression($operator, $operands)
-                        );
+                        $operands = array(new Expression($operator, $operands));
                         $operator = $token;
                     } else {
                         $buffer = array_slice($operands, $operatorIndex);
