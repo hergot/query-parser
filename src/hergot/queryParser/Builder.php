@@ -61,20 +61,17 @@ class Builder
                         $operands = array(new Expression($operator, $operands));
                         $operator = $token;
                     } else {
-                        $buffer = array_slice($operands, $operatorIndex);
                         $operands = array_slice($operands, 0, $operatorIndex);
                         $tokenPriority = $this->getOperatorPriority($token);
-                        for ($j = $i; $j < $length; $j++) {
-                            if ($tokens[$j]->getClass() === 'operator') {
-                                $priority = $this->getOperatorPriority($tokens[$j]);
-                                if ($priority >= $tokenPriority) {
-                                    break;
-                                }
-                            }
-                            $buffer[] = $tokens[$j];
-                        }
-                        $i = $j;
+                        $index = $this->findHigherPriorityOperatorIndex(
+                            $tokens, $tokenPriority, $i
+                        );
+                        $buffer = array_merge(
+                            array_slice($operands, $operatorIndex),
+                            array_slice($tokens, $i, $index)
+                        );
                         $operands[] = $this->build($buffer);
+                        $i = $index;
                     }
                 }
             } else {
@@ -88,6 +85,30 @@ class Builder
         } else {
             return $operands;
         }
+    }
+
+    /**
+     * Find index of higher priority operator in tokens
+     *
+     * @param array $tokens           list of Token
+     * @param int   $operatorPriority looking for operator
+     *                                which has bigger priority than this
+     * @param int   $startIndex       how many tokens should be skipped
+     *
+     * @return int
+     */
+    private function findHigherPriorityOperatorIndex(array $tokens,
+        $operatorPriority, $startIndex
+    ) {
+        for ($i = $startIndex, $length = count($tokens); $i < $length; $i++) {
+            if ($tokens[$i]->getClass() === 'operator') {
+                $priority = $this->getOperatorPriority($tokens[$i]);
+                if ($priority >= $operatorPriority) {
+                    break;
+                }
+            }
+        }
+        return $i;
     }
 
     /**
