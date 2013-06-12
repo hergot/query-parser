@@ -49,6 +49,42 @@ class Tokenizer
             PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE
         );
         // handle strings -> join tokens which are inside string
+        $stringTokens = $this->processStrings($tokens);
+
+        $filteredTokens = array_values(
+            array_filter(
+                $stringTokens, function ($item) {
+                    return trim($item[0]) !== '';
+                }
+            )
+        );
+
+        $classifiedTokens = array_map(
+            function ($item) {
+                $class = $this->classify($item);
+                if ($class === 'string') {
+                    $quote = $item[0];
+                    $item = str_replace(
+                        $quote . $quote, $quote, trim($item, $quote)
+                    );
+                }
+                return new Token($item, $class);
+            }, $filteredTokens
+        );
+        return $classifiedTokens;
+    }
+
+    /**
+     * Process strings in tokens
+     * Group all tokens between quote tokens
+     *
+     * @param array $tokens list of string tokens
+     *
+     * @return array
+     * @throws \RuntimeException
+     */
+    private function processStrings(array $tokens)
+    {
         $stringTokens = array();
         $buffer = array();
         $inString = false;
@@ -63,50 +99,30 @@ class Tokenizer
                 if (isset($tokens[$index+1]) && $tokens[$index+1] === $stringQuote) {
                     $buffer[] = $stringQuote;
                     $index++;
-                    continue;
-                }
-                $inString = !$inString;
-                if (!$inString) {
-                    $buffer[] = $token;
-                    $stringTokens[] = implode('', $buffer);
-                    $buffer = array();
-                    $stringQuote = null;
                 } else {
-                    $buffer[] = $stringQuote;
+                    $inString = !$inString;
+                    if (!$inString) {
+                        $buffer[] = $token;
+                        $stringTokens[] = implode('', $buffer);
+                        $buffer = array();
+                        $stringQuote = null;
+                    } else {
+                        $buffer[] = $stringQuote;
+                    }
                 }
-                continue;
-            }
-            if ($inString) {
+            } elseif ($inString) {
                 $buffer[] = $token;
             } else {
                 $stringTokens[] = $token;
             }
         }
+
         if (!empty($buffer)) {
             throw new \RuntimeException(
                 'Unclosed string. Context: ' . implode('', $buffer)
             );
         }
-        $filteredTokens = array_values(
-            array_filter(
-                $stringTokens, function ($item) {
-                    return trim($item[0]) !== '';
-                }
-            )
-        );
-        $classifiedTokens = array_map(
-            function ($item) {
-                $class = $this->classify($item);
-                if ($class === 'string') {
-                    $quote = $item[0];
-                    $item = str_replace(
-                        $quote . $quote, $quote, trim($item, $quote)
-                    );
-                }
-                return new Token($item, $class);
-            }, $filteredTokens
-        );
-        return $classifiedTokens;
+        return $stringTokens;
     }
 
     /**
