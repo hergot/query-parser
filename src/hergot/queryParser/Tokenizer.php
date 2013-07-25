@@ -59,18 +59,17 @@ class Tokenizer
             )
         );
 
-        $classifiedTokens = array_map(
-            function ($item) {
-                $class = $this->classify($item);
-                if ($class === 'string') {
-                    $quote = $item[0];
-                    $item = str_replace(
-                        $quote . $quote, $quote, trim($item, $quote)
-                    );
-                }
-                return new Token($item, $class);
-            }, $filteredTokens
-        );
+        $classifiedTokens = array();
+        foreach ($filteredTokens as $item) {
+            $class = $this->classify($item);
+            if ($class === 'string') {
+                $quote = $item[0];
+                $item = str_replace(
+                    $quote . $quote, $quote, trim($item, $quote)
+                );
+            }
+            $classifiedTokens[] = new Token($item, $class);
+        }
         return $classifiedTokens;
     }
 
@@ -191,7 +190,7 @@ class Tokenizer
         }
 
         foreach ($this->tokens as $class => $values) {
-            if (in_array($token, $values)) {
+            if (in_array(strtolower($token), $values)) {
                 return $class;
             }
         }

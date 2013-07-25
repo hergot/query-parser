@@ -68,10 +68,10 @@ class Builder
                         );
                         $buffer = array_merge(
                             array_slice($operands, $operatorIndex),
-                            array_slice($tokens, $i, $index)
+                            array_slice($tokens, $i - 1, $index)
                         );
                         $operands[] = $this->build($buffer);
-                        $i = $index;
+                        $i = $index + 1;
                     }
                 }
             } else {
@@ -152,7 +152,7 @@ class Builder
      */
     private function getOperatorPriority(Token $operator)
     {
-        $operatorContent = $operator->getContent();
+        $operatorContent = strtolower($operator->getContent());
         $result = 7;
         if (in_array($operatorContent, array('*', '/', '%'))) {
             $result = 1;
